@@ -30,18 +30,6 @@ namespace Client
     {
         private const int Port = 5000;
 
-        /*public void Constraint_ConnectionWithoutRequest_ShouldConnect()
-        {
-            using var client = new TcpClient();
-            //connect to local IP Address
-            client.Connect(IPAddress.Loopback, port: 5000 );
-         
-            var stream = client.GetStream();
-
-            var data = Encoding.UTF8.GetBytes("Hello I'm a new client. Are you the server?");
-            // open the canal and send message
-            stream.Write(data);
-        }*/
         public void Constraint_ConnectionWithoutRequest_ShouldConnect()
         {
             var client = Connect();
