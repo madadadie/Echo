@@ -18,6 +18,15 @@ namespace PrereqClient
             var data = Encoding.UTF8.GetBytes("Hello I'm a new client. Are you the server?");
             // open the canal and send message
             stream.Write(data);
+
+
+            //response from the server
+            data = new byte[client.ReceiveBufferSize];
+            //stream returns a number of bytes read from the client
+            var count = stream.Read(data);
+            // convert bytes into string 
+            var message = Encoding.UTF8.GetString(data, 0, count);
+            Console.WriteLine($"New message from server: {message}");
         }
     }
 }
