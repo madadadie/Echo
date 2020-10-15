@@ -6,7 +6,7 @@ using System.Text;
 
 namespace PrereqServer
 {
-    class ServerProgram
+    class PrereqServerProgram
     {
         static void Main(string[] args)
         {

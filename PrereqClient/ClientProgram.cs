@@ -5,7 +5,7 @@ using System.Text;
 
 namespace PrereqClient
 {
-    class ClientProgram
+    class PrereqClientProgram
     {
         static void Main(string[] args)
         {
