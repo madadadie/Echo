@@ -2,11 +2,23 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 
 namespace PrereqClient
 {
     class PrereqClientProgram
     {
+        public static void SendRequest(TcpClient client, string request)
+        {
+            var msg = Encoding.UTF8.GetBytes(request);
+            client.GetStream().Write(msg, 0, msg.Length);
+        }
+
+        public static string ToJson(object data)
+        {
+            return JsonSerializer.Serialize(data, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        }
+
         static void Main(string[] args)
         {
             for (int j = 0; j < 5; j++)
@@ -15,11 +27,19 @@ namespace PrereqClient
                 //connect to local IP Address
                 client.Connect(IPAddress.Loopback, port: 5000);
 
-                var stream = client.GetStream();
+                //var stream = client.GetStream();
 
-                var data = Encoding.UTF8.GetBytes($"Hello I'm a new client {j}. Are you the server?");
+                //var data = Encoding.UTF8.GetBytes($"Hello I'm a new client {j}. Are you the server?");
                 // open the canal and send message
-                stream.Write(data);
+                // stream.Write(data);
+                var req = new
+                {
+                    Method = "delete",
+                    Path = "/api/categories/1234",
+                    Date = $"{j}"
+                };
+
+                SendRequest(client,ToJson(req));
 
                 /*
                 //response from the server
@@ -31,5 +51,7 @@ namespace PrereqClient
                 Console.WriteLine($"New message from server: {message}");*/
             }
         }
+
+      
     }
 }

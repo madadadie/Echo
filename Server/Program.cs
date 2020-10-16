@@ -56,16 +56,15 @@ namespace Server
                 {
                     try
                     {
+                        //each thread handles a client connection
+                        var request = new Request();
                         var client = server.AcceptTcpClient();
                         var stream = client.GetStream();
-                        // need space to store what is reading
                         // allocate space corresponding to the message sent by client
                         byte[] data = new byte[client.ReceiveBufferSize];
-                        //stream returns a number of bytes read from the client
-                        var count = stream.Read(data);
-                        // convert bytes into string 
-                        var message = Encoding.UTF8.GetString(data, 0, count);
-                        Console.WriteLine($"Thread {i} -- message from new client : {message}");
+                        
+                        request = ChargeClientRequest(stream, data);
+                        Console.WriteLine($"Thread {i} -- message from new client : {request.Method} , {request.Body}, {request.Path}, {request.Date}");
                         i += 1;
                     }
                     catch (Exception e)
@@ -76,13 +75,29 @@ namespace Server
                 }
             });
             thread.Start();
-            //thread.Name = $" child{i}";
+            
         }
         static void Main(string[] args)
         {
             StartServerThread();
             Thread.Sleep(300);
         }
+
+        public static Request ChargeClientRequest(NetworkStream stream, byte[] data)
+        {
+            //stream returns a number of bytes read from the client
+            var count = stream.Read(data);
+            // convert bytes into string 
+            var message = Encoding.UTF8.GetString(data, 0, count);
+            //from JSON text to request object
+            return JsonSerializer.Deserialize<Request>(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        }
+
+        public static void AnalyseClientRequest(Request req)
+        {
+
+        }
+
 
 
     }
