@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 namespace Server
@@ -67,6 +68,7 @@ namespace Server
                         request = ChargeClientRequest(stream, data);
                         Console.WriteLine($"Thread {i} -- message from new client : {request.Method} , {request.Body}, {request.Path}, {request.Date}");
                         Console.WriteLine($"right or wrong method : {AnalyseClientRequest(request)}");
+                        Console.WriteLine($"right or wrong path : {VerifyPath(request)}");
                         i += 1;
                     }
                     catch (Exception e)
@@ -102,31 +104,41 @@ namespace Server
             switch (method)
             {
                 case "create":
-                    Console.WriteLine("method create");
+                    //Console.WriteLine("method create");
                     test = true;
                     break;
                 case "read":
-                    Console.WriteLine("method read");
+                    //Console.WriteLine("method read");
                     test = true;
                     break;
                 case "update":
-                    Console.WriteLine("method update");
+                    //Console.WriteLine("method update");
                     test = true;
                     break;
                 case "delete":
-                    Console.WriteLine("method delete");
+                    //Console.WriteLine("method delete");
                     test = true;
                     break;
                 case "echo":
-                    Console.WriteLine("method echo");
+                    //Console.WriteLine("method echo");
                     test = true;
                     break;
                 default:
-                    Console.WriteLine("unknown method");
+                    //Console.WriteLine("unknown method");
                     test = false;
                     break;
             }
             return test;
+        }
+
+
+        public static bool VerifyPath(Request req)
+        {
+            Regex pattern = new Regex(@"^/\w+/\w+(/\d+)?$");
+            //MatchCollection match = pattern.Matches(req.Path);
+            //for (int i = 0; i < match.Count; i++)
+            //    Console.WriteLine(match[i].Value);
+            return pattern.IsMatch(req.Path);
         }
     }
 
