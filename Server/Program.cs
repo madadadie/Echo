@@ -38,10 +38,7 @@ namespace Server
     class ServerProgram
     {
         private const int Port = 5000;
-        private static string UnixTimestamp()
-        {
-            return DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
-        }
+        
         //public string Name { get; set; }
 
 
@@ -67,8 +64,9 @@ namespace Server
                         
                         request = ChargeClientRequest(stream, data);
                         Console.WriteLine($"Thread {i} -- message from new client : {request.Method} , {request.Body}, {request.Path}, {request.Date}");
-                        Console.WriteLine($"right or wrong method : {AnalyseClientRequest(request)}");
+                        Console.WriteLine($"right or wrong method : {VerifyMethod(request)}");
                         Console.WriteLine($"right or wrong path : {VerifyPath(request)}");
+                        Console.WriteLine($"right or wrong date : {VerifyDate(request)}");
                         i += 1;
                     }
                     catch (Exception e)
@@ -97,7 +95,7 @@ namespace Server
             return JsonSerializer.Deserialize<Request>(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
 
-        public static bool AnalyseClientRequest(Request req)
+        public static bool VerifyMethod(Request req)
         {
             var method = req.Method.ToLower();
             bool test;
@@ -140,6 +138,27 @@ namespace Server
             //    Console.WriteLine(match[i].Value);
             return pattern.IsMatch(req.Path);
         }
+
+        public static bool VerifyDate(Request req)
+        {
+            return TryToParse(req.Date);
+          
+        }
+        private static bool TryToParse(string value)
+        {
+            bool success = Int64.TryParse(value, out long number);
+            if (success)
+            {
+                Console.WriteLine("Converted '{0}' to {1}.", value, number);
+            }
+            else
+            {
+                if (value == null) value = "";
+                Console.WriteLine("Attempted conversion of '{0}' failed.", value);
+            }
+            return success;
+        }
+
     }
 
    

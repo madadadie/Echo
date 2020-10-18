@@ -19,9 +19,14 @@ namespace PrereqClient
             return JsonSerializer.Serialize(data, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
 
+        private static string UnixTimestamp()
+        {
+            return DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
+        }
+
         static void Main(string[] args)
         {
-            for (int j = 0; j < 2; j++)
+            for (int j = 0; j < 1; j++)
             {
                 using var client = new TcpClient();
                 //connect to local IP Address
@@ -36,8 +41,9 @@ namespace PrereqClient
                 {
                     method = "delete",
                     Path = "/api/categories/1234",
-                    Date = $"{j}"
-                };
+                    Date = "1507318869"
+                
+            };
 
                 SendRequest(client,ToJson(req));
 
