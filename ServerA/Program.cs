@@ -197,6 +197,7 @@ namespace ServerA
         {
             if (string.IsNullOrWhiteSpace(body))
             {
+                Console.WriteLine("Missing body");
                 return false;
             }
             //Removes all leading and trailing white-space characters from the current string

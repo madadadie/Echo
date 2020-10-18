@@ -41,7 +41,8 @@ namespace PrereqClient
                 {
                     method = "delete",
                     Path = "/api/categories/1234",
-                    Date = "1507318869"
+                    Date = "1507318869",
+                    Body = "{cid:1, name:\"NewName\"}"
                 
             };
 
