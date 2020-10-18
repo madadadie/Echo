@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
@@ -10,7 +8,8 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace AServer
+
+namespace ServerA
 {
     public class Response
     {
@@ -85,7 +84,7 @@ namespace AServer
                         var stream = client.GetStream();
                         // allocate space corresponding to the message sent by client
                         byte[] data = new byte[client.ReceiveBufferSize];
-                        
+
                         request = ChargeClientRequest(stream, data);
                         Console.WriteLine($"Thread {i} -- message from new client : {request.Method} , {request.Body}, {request.Path}, {request.Date}");
                         Console.WriteLine($"right or wrong method : {VerifyMethod(request)}");
@@ -102,9 +101,9 @@ namespace AServer
                 }
             });
             thread.Start();
-            
+
         }
-       
+
         public static Request ChargeClientRequest(NetworkStream stream, byte[] data)
         {
             //stream returns a number of bytes read from the client
@@ -163,7 +162,7 @@ namespace AServer
         public static bool VerifyDate(Request req)
         {
             return TryToParse(req.Date);
-          
+
         }
 
         public static bool VerifyBody(Request req)
@@ -196,8 +195,9 @@ namespace AServer
 
         private static bool IsValidJson(string body)
         {
-            if (string.IsNullOrWhiteSpace(body)) { 
-                return false; 
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                return false;
             }
             //Removes all leading and trailing white-space characters from the current string
             body = body.Trim();
@@ -206,7 +206,7 @@ namespace AServer
             {
                 try
                 {
-                    var obj = JToken.Parse(body);
+                    var obj = Newtonsoft.Json.Linq.JToken.Parse(body);
                     return true;
                 }
                 catch (JsonReaderException jex)
@@ -231,11 +231,11 @@ namespace AServer
 
     }
 
-    
+
 }
 
    
 
 
 
-}
+
