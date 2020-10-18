@@ -21,7 +21,7 @@ namespace PrereqClient
 
         static void Main(string[] args)
         {
-            for (int j = 0; j < 5; j++)
+            for (int j = 0; j < 2; j++)
             {
                 using var client = new TcpClient();
                 //connect to local IP Address
@@ -34,7 +34,7 @@ namespace PrereqClient
                 // stream.Write(data);
                 var req = new
                 {
-                    Method = "delete",
+                    method = "delete",
                     Path = "/api/categories/1234",
                     Date = $"{j}"
                 };

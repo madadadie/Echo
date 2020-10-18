@@ -15,6 +15,7 @@ namespace Server
         public string Body { get; set; }
     }
 
+
     public class Category
     {
         [JsonPropertyName("cid")]
@@ -65,6 +66,7 @@ namespace Server
                         
                         request = ChargeClientRequest(stream, data);
                         Console.WriteLine($"Thread {i} -- message from new client : {request.Method} , {request.Body}, {request.Path}, {request.Date}");
+                        Console.WriteLine($"right or wrong method : {AnalyseClientRequest(request)}");
                         i += 1;
                     }
                     catch (Exception e)
@@ -93,13 +95,39 @@ namespace Server
             return JsonSerializer.Deserialize<Request>(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
 
-        public static void AnalyseClientRequest(Request req)
+        public static bool AnalyseClientRequest(Request req)
         {
-
+            var method = req.Method.ToLower();
+            bool test;
+            switch (method)
+            {
+                case "create":
+                    Console.WriteLine("method create");
+                    test = true;
+                    break;
+                case "read":
+                    Console.WriteLine("method read");
+                    test = true;
+                    break;
+                case "update":
+                    Console.WriteLine("method update");
+                    test = true;
+                    break;
+                case "delete":
+                    Console.WriteLine("method delete");
+                    test = true;
+                    break;
+                case "echo":
+                    Console.WriteLine("method echo");
+                    test = true;
+                    break;
+                default:
+                    Console.WriteLine("unknown method");
+                    test = false;
+                    break;
+            }
+            return test;
         }
-
-
-
     }
 
    
