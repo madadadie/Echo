@@ -7,9 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrereqClient", "PrereqClien
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PrereqServer", "PrereqServer\PrereqServer.csproj", "{9F47111F-F1D4-4017-B0AD-91B858A1106F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{21AB0DE9-596E-409B-A070-7553F648A0C2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AServer", "Server\AServer.csproj", "{21AB0DE9-596E-409B-A070-7553F648A0C2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Client", "Client\Client.csproj", "{9D994C6E-BFAF-465D-906D-6A4279AD9B6C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Client\Client.csproj", "{9D994C6E-BFAF-465D-906D-6A4279AD9B6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

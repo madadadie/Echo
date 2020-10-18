@@ -1,14 +1,16 @@
 ﻿using Microsoft.VisualBasic;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace Server
+namespace AServer
 {
     public class Response
     {
@@ -33,15 +35,37 @@ namespace Server
         public string Body { get; set; }
     }
 
+    [Serializable]
+    internal class JsonReaderException : Exception
+    {
+        public JsonReaderException()
+        {
+        }
 
+        public JsonReaderException(string message) : base(message)
+        {
+        }
 
-    class ServerProgram
+        public JsonReaderException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        protected JsonReaderException(SerializationInfo info, StreamingContext context) : base(info, context)
+        {
+        }
+    }
+
+    class AServerProgram
     {
         private const int Port = 5000;
-        
+
         //public string Name { get; set; }
 
-
+        static void Main(string[] args)
+        {
+            StartServerThread();
+            Thread.Sleep(300);
+        }
         //method to create listener threads
         public static void StartServerThread()
         {
@@ -67,6 +91,7 @@ namespace Server
                         Console.WriteLine($"right or wrong method : {VerifyMethod(request)}");
                         Console.WriteLine($"right or wrong path : {VerifyPath(request)}");
                         Console.WriteLine($"right or wrong date : {VerifyDate(request)}");
+                        Console.WriteLine($"right or wrong body : {VerifyBody(request)}");
                         i += 1;
                     }
                     catch (Exception e)
@@ -79,12 +104,7 @@ namespace Server
             thread.Start();
             
         }
-        static void Main(string[] args)
-        {
-            StartServerThread();
-            Thread.Sleep(300);
-        }
-
+       
         public static Request ChargeClientRequest(NetworkStream stream, byte[] data)
         {
             //stream returns a number of bytes read from the client
@@ -95,6 +115,7 @@ namespace Server
             return JsonSerializer.Deserialize<Request>(message, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
 
+        //verify constraints
         public static bool VerifyMethod(Request req)
         {
             var method = req.Method.ToLower();
@@ -144,6 +165,15 @@ namespace Server
             return TryToParse(req.Date);
           
         }
+
+        public static bool VerifyBody(Request req)
+        {
+            var test = IsValidJson(req.Body);
+            return test;
+
+        }
+
+        // Utils
         private static bool TryToParse(string value)
         {
             bool success = Int64.TryParse(value, out long number);
@@ -159,7 +189,50 @@ namespace Server
             return success;
         }
 
+        public static string ToJson(object data)
+        {
+            return JsonSerializer.Serialize(data, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+        }
+
+        private static bool IsValidJson(string body)
+        {
+            if (string.IsNullOrWhiteSpace(body)) { 
+                return false; 
+            }
+            //Removes all leading and trailing white-space characters from the current string
+            body = body.Trim();
+            if ((body.StartsWith("{") && body.EndsWith("}")) || //For object
+                (body.StartsWith("[") && body.EndsWith("]"))) //For array
+            {
+                try
+                {
+                    var obj = JToken.Parse(body);
+                    return true;
+                }
+                catch (JsonReaderException jex)
+                {
+                    //Exception in parsing json
+                    Console.WriteLine(jex.Message);
+                    return false;
+                }
+                catch (Exception ex) //some other exception
+                {
+                    Console.WriteLine(ex.ToString());
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+
+
     }
+
+    
+}
 
    
 
