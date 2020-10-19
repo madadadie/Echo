@@ -1,12 +1,27 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace PrereqClient
 {
-    class PrereqClientProgram
+    public class Response
+    {
+        public string Status { get; set; }
+        public string Body { get; set; }
+    }
+
+    public class Category
+    {
+        [JsonPropertyName("cid")]
+        public int Id { get; set; }
+        [JsonPropertyName("name")]
+        public string Name { get; set; }
+    }
+    static class  PrereqClientProgram
     {
         public static void SendRequest(TcpClient client, string request)
         {
@@ -22,6 +37,25 @@ namespace PrereqClient
         private static string UnixTimestamp()
         {
             return DateTimeOffset.Now.ToUnixTimeSeconds().ToString();
+        }
+        public static Response ReadResponse(this TcpClient client)
+        {
+            var strm = client.GetStream();
+            //strm.ReadTimeout = 250;
+            byte[] resp = new byte[2048];
+            using (var memStream = new MemoryStream())
+            {
+                int bytesread = 0;
+                do
+                {
+                    bytesread = strm.Read(resp, 0, resp.Length);
+                    memStream.Write(resp, 0, bytesread);
+
+                } while (bytesread == 2048);
+
+                var responseData = Encoding.UTF8.GetString(memStream.ToArray());
+                return JsonSerializer.Deserialize<Response>(responseData, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            }
         }
 
         static void Main(string[] args)
@@ -44,9 +78,11 @@ namespace PrereqClient
                     Date = "1507318869",
                     Body = "{cid:1, name:\"NewName\"}"
                 
-            };
+                };
 
                 SendRequest(client,ToJson(req));
+                var response = client.ReadResponse();
+                Console.WriteLine($"mesage from server -- {response.Status} {response.Body}");
 
                 /*
                 //response from the server
