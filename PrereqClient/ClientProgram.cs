@@ -73,10 +73,10 @@ namespace PrereqClient
                 // stream.Write(data);
                 var req = new
                 {
-                    method = "delete",
+                    method = "read",
                     Path = "/api/categories/1234",
-                    Date = "1507318869",
-                    Body = "{cid:1, name:\"NewName\"}"
+                    Date = "15078869",
+                    
                 
                 };
 

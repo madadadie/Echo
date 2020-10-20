@@ -35,7 +35,9 @@ namespace Client
             var client = Connect();
             Assert.True(client.Connected);
         }
-
+        static void Main(string[] args)
+        { 
+        }
         public void Constraint_RequestWithoutMethod_MissingMethodError()
         {
             var client = Connect();
@@ -59,6 +61,7 @@ namespace Client
             return client;
         }
     }
+   
 
     public static class Util
     {
