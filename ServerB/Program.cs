@@ -333,7 +333,11 @@ namespace ServerB
             {
                 pattern = case_1;
             }
-            else if (req.Method.ToLower() == "delete" && req.Method.ToLower() == "update")
+            else if (req.Method.ToLower() == "delete")
+            {
+                pattern = case_2;
+            }
+            else if(req.Method.ToLower() == "update")
             {
                 pattern = case_2;
             }

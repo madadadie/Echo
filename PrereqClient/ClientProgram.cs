@@ -73,9 +73,10 @@ namespace PrereqClient
                 // stream.Write(data);
                 var req = new
                 {
-                    method = "read",
-                    Path = "/api/categories/1234",
+                    method = "update",
+                    Path = "/api/categories/",
                     Date = "15078869",
+                    Body = "{cid:1, name:\"Newname\"}"
                     
                 
                 };
