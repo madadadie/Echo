@@ -100,6 +100,8 @@ namespace ServerA
 
                         request = ReadRequest(stream, data);
                         Console.WriteLine($"Thread {i} -- message from new client : {request.Method} , {request.Body}, {request.Path}, {request.Date}");
+                        var newEl = JsonSerializer.Deserialize<Category>(request.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                        Console.WriteLine($"{ newEl.Id} , {newEl.Name}");
                         client.ReplyToRequest(request);
                         i += 1;
                     }
@@ -415,12 +417,14 @@ namespace ServerA
                 {
                     //Exception in parsing json
                     Console.WriteLine(jex.Message);
+                    Console.WriteLine("test1");
                     test = (int)Reason.Illegal;
                     return test;
                 }
                 catch (Exception ex) //some other exception
                 {
                     Console.WriteLine(ex.ToString());
+                    Console.WriteLine("test2");
                     test = (int)Reason.Illegal;
                     return test;
                 }

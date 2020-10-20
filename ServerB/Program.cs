@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.Json;
@@ -25,9 +26,13 @@ namespace ServerB
 
     public class Request
     {
+        [JsonPropertyName("method")]
         public string Method { get; set; }
+        [JsonPropertyName("path")]
         public string Path { get; set; }
+        [JsonPropertyName("date")]
         public string Date { get; set; }
+        [JsonPropertyName("body")]
         public string Body { get; set; }
     }
 
@@ -78,21 +83,22 @@ namespace ServerB
         static void Main(string[] args)
         {
             // Create a new dictionary of strings, with int keys.
-            init();
-            StartServerThread();
+            Dictionary<int, string> category = new Dictionary<int, string>();
+            init(category);
+            StartServerThread(category);
             Thread.Sleep(300);
         }
 
        
-        static void init()
+        static void init(Dictionary<int, string> category)
         {
-            Dictionary<int, string> category = new Dictionary<int, string>();
+           
             category.Add(1, "Beverages");
             category.Add(2, "Condiments");
             category.Add(3, "Confections");
         }
         //method to create listener threads
-        public static void StartServerThread()
+        public static void StartServerThread(Dictionary<int, string> category)
         {
             var server = new TcpListener(IPAddress.Loopback, Port);
             server.Start();
@@ -113,7 +119,7 @@ namespace ServerB
 
                         request = ReadRequest(stream, data);
                         Console.WriteLine($"Thread {i} -- message from new client : {request.Method} , {request.Body}, {request.Path}, {request.Date}");
-                        client.ReplyToRequest(request);
+                        client.ReplyToRequest(request, category);
                         i += 1;
                     }
                     catch (Exception e)
@@ -138,7 +144,7 @@ namespace ServerB
         }
 
 
-        public static void ReplyToRequest(this TcpClient client, Request req)
+        public static void ReplyToRequest(this TcpClient client, Request req, Dictionary<int, string> category)
         {
 
             bool success;
@@ -225,10 +231,16 @@ namespace ServerB
             {
                 if (method == 3)
                 {
+                    var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
                     
+                    category.Insert(newEl.Name);
                     var response = new
                     {
                         Status = $"{ (int)StatusCode.Created} Created",
+                        Body = new {
+                            cid =category.Keys.Last(),
+                            name= newEl
+                        }
                         
                     };
                     
@@ -397,9 +409,30 @@ namespace ServerB
 
         }
 
+       /* public static int VerifyBody(Request req)
+        {
+            int test ='';
+            //var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            if (req.Method.ToLower() == "read")
+            {
+                switch (req.Body)
+                {
+                    case null:
+                        test = (int)Reason.Ok;
+                        break;
+                    default:
+                        test = (int)Reason.Illegal;
+                        break;
+                }
+                
+            }
+            return test;
+        }*/
         public static int VerifyBody(Request req)
         {
             int test;
+            var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+
             if (req.Method.ToLower() == "read")
             {
                 switch (req.Body)
@@ -413,14 +446,40 @@ namespace ServerB
                 }
                 return test;
             }
+            else if (req.Method.ToLower() == "delete")
+            {
+                switch (req.Body)
+                {
+                    case null:
+                        test = (int)Reason.Ok;
+                        break;
+                    default:
+                        test = (int)Reason.Illegal;
+                        break;
+                }
+                return test;
+            }
+            else if (req.Method.ToLower() == "update")
+            {
+
+                if (newEl.Id == 0) test = (int)Reason.Illegal;
+                else test = IsValidJson(req.Body);
+                return test;
+
+            }
+            else if (req.Method.ToLower() == "create")
+            {
+                if (newEl.Id > 0) test = (int)Reason.Illegal;
+                else test = IsValidJson(req.Body);
+                return test;
+
+            }
             else
             {
-                test = IsValidJson(req.Body);
-                return test;
+                return VerifyMethod(req);
             }
 
         }
-
         // Utils
 
         public static string ToJson(object data)

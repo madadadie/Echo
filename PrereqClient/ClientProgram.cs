@@ -10,7 +10,9 @@ namespace PrereqClient
 {
     public class Response
     {
+        [JsonPropertyName("status")]
         public string Status { get; set; }
+        [JsonPropertyName("body")]
         public string Body { get; set; }
     }
 
@@ -29,7 +31,7 @@ namespace PrereqClient
             client.GetStream().Write(msg, 0, msg.Length);
         }
 
-        public static string ToJson(object data)
+        public static string ToJson(this object data)
         {
             return JsonSerializer.Serialize(data, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
@@ -74,9 +76,13 @@ namespace PrereqClient
                 var req = new
                 {
                     method = "update",
-                    Path = "/api/categories/",
+                    Path = "/api/categories",
                     Date = "15078869",
-                    Body = "{cid:1, name:\"Newname\"}"
+                    Body = new
+                    {
+                       cid = 3,
+                       name = "Newname"
+                    }.ToJson()
                     
                 
                 };
