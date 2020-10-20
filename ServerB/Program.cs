@@ -87,6 +87,8 @@ namespace ServerB
             init(category);
             StartServerThread(category);
             Thread.Sleep(300);
+
+         
         }
 
        
@@ -119,7 +121,7 @@ namespace ServerB
 
                         request = ReadRequest(stream, data);
                         Console.WriteLine($"Thread {i} -- message from new client : {request.Method} , {request.Body}, {request.Path}, {request.Date}");
-                       // Console.WriteLine(request.Body.Length);
+                       
                         client.ReplyToRequest(request, category);
                         i += 1;
                     }
@@ -131,6 +133,7 @@ namespace ServerB
                 }
             });
             thread.Start();
+            
 
         }
 
@@ -248,17 +251,10 @@ namespace ServerB
                 }
                 else if (method == 4)
                 {
+                    string[] str = req.Path.Split("/", StringSplitOptions.RemoveEmptyEntries);
+                    var id = int.Parse(str[str.Length - 1]);
                     var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-                    if (category.Update(newEl.Id, newEl.Name))
-                    {
-                        var response = new
-                        {
-                            Status = $"{ (int)StatusCode.Updated} Updated"
-
-                        };
-                        client.SendResponse(response.ToJson());
-                    }
-                    else
+                    if (id != newEl.Id)
                     {
                         var response = new
                         {
@@ -267,6 +263,28 @@ namespace ServerB
                         };
                         client.SendResponse(response.ToJson());
                     }
+                    else 
+                    {
+                        if (category.Update(newEl.Id, newEl.Name))
+                        {
+                            var response = new
+                            {
+                                Status = $"{ (int)StatusCode.Updated} Updated"
+
+                            };
+                            client.SendResponse(response.ToJson());
+                        }
+                        else
+                        {
+                            var response = new
+                            {
+                                Status = $"{ (int)StatusCode.Not_Found} Not Found"
+
+                            };
+                            client.SendResponse(response.ToJson());
+                        }
+                    }
+                   
                     
 
                 }
@@ -306,7 +324,11 @@ namespace ServerB
                                 var response = new
                                 {
                                     Status = $"{ (int)StatusCode.Ok} Ok",
-                                    Body = category.FindById(id).ToJson()
+                                    Body = new 
+                                    {  
+                                        cid = id,
+                                        name = category.FindById(id) 
+                                    }.ToJson()
 
                                 };
 
@@ -344,7 +366,7 @@ namespace ServerB
                             var response = new
                             {
                                 Status = $"{ (int)StatusCode.Ok} Ok",
-                                Body = req.Body
+                                req.Body
 
                             };
                             client.SendResponse(response.ToJson());
@@ -356,13 +378,23 @@ namespace ServerB
             }
             else
             {
-                var response = new
+                if (res.ToArray().Length > 1) {
+                    var response = new
+                    {
+                        Status = $"{ (int)StatusCode.Bad_Request} bad request {String.Join(", ", res.ToArray())}"
+                    };
+                    client.SendResponse(response.ToJson());
+                }
+                else
                 {
-                    Status = $"{ (int)StatusCode.Bad_Request} Bad Request",
-                    Body = String.Join(", ", res.ToArray())
-                };
+                    var response = new
+                    {
+                        Status = $"{ (int)StatusCode.Bad_Request} bad request"
+                    };
+                    client.SendResponse(response.ToJson());
+                }
 
-                client.SendResponse(response.ToJson());
+                
             }
 
         }
@@ -405,10 +437,6 @@ namespace ServerB
                   
                     test = (int)Reason.Missing;
                     break;
-                case null:
-                    
-                    test = (int)Reason.Missing;
-                    break;
                 default:
                    
                     test = (int)Reason.Illegal;
@@ -440,19 +468,23 @@ namespace ServerB
             }
             else if(req.Method.ToLower() == "read")
             {
+                
                 pattern = case_3;
             }
             if (string.IsNullOrWhiteSpace(req.Path))
             {
-                test = (int)Reason.Missing;
-                return test;
+                if (req.Method.ToLower() == "echo")
+                {
+                    test = (int)Reason.Ok;
+                    return test;
+                }
+                else
+                {
+                    test = (int)Reason.Missing;
+                    return test;
+                }
             }
             else if (pattern.IsMatch(req.Path))
-            {
-                test = (int)Reason.Ok;
-                return test;
-            }
-            else if (req.Method.ToLower() =="echo")
             {
                 test = (int)Reason.Ok;
                 return test;
@@ -540,8 +572,13 @@ namespace ServerB
                 }
                 else
                 {
-                    var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-                    if (newEl.Id <= 0) test = (int)Reason.Illegal;
+                     if(IsValidJson(req.Body) == 0)
+                    {
+                        var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                        if (newEl.Id <= 0) test = (int)Reason.Illegal;
+                        else return test = (int)Reason.Ok;
+                    }
+                    
                     else test = IsValidJson(req.Body);
                 }
                 return test;
@@ -590,7 +627,7 @@ namespace ServerB
             }
             else
             {
-                return VerifyMethod(req);
+                return -1;
             }
 
         }

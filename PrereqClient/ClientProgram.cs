@@ -75,12 +75,9 @@ namespace PrereqClient
                 // stream.Write(data);
                 var req = new
                 {
-                    method = "echo",
-                    Path = "/api/categories",
-                    Date = "15078869",
-                   Body = "Hello Word"
-                    
-                
+                    Method = "echo",
+                    Date = UnixTimestamp(),
+                    Body = "Hello World"
                 };
 
                 SendRequest(client,ToJson(req));
