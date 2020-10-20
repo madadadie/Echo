@@ -74,7 +74,7 @@ namespace ServerB
         To_update,
     }
 
-    internal static class ServerBProgram
+    static class ServerBProgram
     {
         private const int Port = 5000;
 
@@ -119,6 +119,7 @@ namespace ServerB
 
                         request = ReadRequest(stream, data);
                         Console.WriteLine($"Thread {i} -- message from new client : {request.Method} , {request.Body}, {request.Path}, {request.Date}");
+                       // Console.WriteLine(request.Body.Length);
                         client.ReplyToRequest(request, category);
                         i += 1;
                     }
@@ -226,7 +227,7 @@ namespace ServerB
             previous = previous & success;
             
             success = previous;
-           
+            Console.WriteLine("success");
             if (success)
             {
                 if (method == 3)
@@ -240,32 +241,106 @@ namespace ServerB
                         Body = new {
                             cid =category.Keys.Last(),
                             name= newEl
-                        }
+                        }.ToJson()
                         
                     };
                     
-                    client.SendResponse(ToJson(response));
+                    client.SendResponse(response.ToJson());
                 }
                 else if (method == 4)
                 {
-                    var response = new
+                    var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                    if (category.Update(newEl.Id, newEl.Name))
                     {
-                        Status = $"{ (int)StatusCode.Updated} Updated",
-                        
-                    };
-                    Console.WriteLine($"response? {response}");
-                    client.SendResponse(ToJson(response));
+                        var response = new
+                        {
+                            Status = $"{ (int)StatusCode.Updated} Updated"
+
+                        };
+                        client.SendResponse(response.ToJson());
+                    }
+                    else
+                    {
+                        var response = new
+                        {
+                            Status = $"{ (int)StatusCode.Not_Found} Not Found"
+
+                        };
+                        client.SendResponse(response.ToJson());
+                    }
+                    
 
                 }
                 else if (method == 0)
                 {
-                    var response = new
+                    Console.WriteLine("here method 0");
+
+                    if (req.Method.ToLower() == "read")
                     {
-                        Status = $"{ (int)StatusCode.Ok} Ok",
-                        
-                    };
-                    Console.WriteLine($"response? {response}");
-                    client.SendResponse(ToJson(response));
+                        string [] str = req.Path.Split("/", StringSplitOptions.RemoveEmptyEntries);
+                        var id = int.Parse(str[str.Length - 1]);
+                        if (id <=0)
+                        {
+                            var response = new
+                            {
+                                Status = $"{ (int)StatusCode.Ok} Ok",
+                                Body = GetAll(category).ToJson()
+
+                            };
+
+                            client.SendResponse(response.ToJson());
+                        }
+                        else
+                        {
+                            if (category.FindById(id)=="")
+                            {
+                                var response = new
+                                {
+                                    Status = $"{ (int)StatusCode.Not_Found} Not Found"
+
+                                };
+
+                                client.SendResponse(response.ToJson());
+                            }
+                            else {
+                                var response = new
+                                {
+                                    Status = $"{ (int)StatusCode.Ok} Ok",
+                                    Body = category.FindById(id).ToJson()
+
+                                };
+
+                                client.SendResponse(response.ToJson());
+                            }
+                            
+                        }
+
+                    }
+                    else if (req.Method.ToLower() == "delete")
+                    {
+                        string[] str = req.Path.Split("/", StringSplitOptions.RemoveEmptyEntries);
+                        var id = int.Parse(str[str.Length - 1]);
+                        if (category.Delete(id))
+                        {
+                            var response = new
+                            {
+                                Status = $"{ (int)StatusCode.Ok} Ok"
+
+                            };
+                            client.SendResponse(response.ToJson());
+                        }
+                        else
+                        {
+                            var response = new
+                            {
+                                Status = $"{ (int)StatusCode.Not_Found} Not Found"
+
+                            };
+                            client.SendResponse(response.ToJson());
+                        }
+                    }
+                    
+
                 }
             }
             else
@@ -275,8 +350,8 @@ namespace ServerB
                     Status = $"{ (int)StatusCode.Bad_Request} Bad Request",
                     Body = String.Join(", ", res.ToArray())
                 };
-                Console.WriteLine($"response? {response}");
-                client.SendResponse(ToJson(response));
+
+                client.SendResponse(response.ToJson());
             }
 
         }
@@ -366,9 +441,6 @@ namespace ServerB
             {
                 test = (int)Reason.Ok;
                 return test;
-                //MatchCollection match = pattern.Matches(req.Path);
-                //for (int i = 0; i < match.Count; i++)
-                //    Console.WriteLine(match[i].Value);
             }
             else
             {
@@ -409,68 +481,71 @@ namespace ServerB
 
         }
 
-       /* public static int VerifyBody(Request req)
-        {
-            int test ='';
-            //var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-            if (req.Method.ToLower() == "read")
-            {
-                switch (req.Body)
-                {
-                    case null:
-                        test = (int)Reason.Ok;
-                        break;
-                    default:
-                        test = (int)Reason.Illegal;
-                        break;
-                }
-                
-            }
-            return test;
-        }*/
         public static int VerifyBody(Request req)
         {
             int test;
-            var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+            
 
             if (req.Method.ToLower() == "read")
             {
-                switch (req.Body)
-                {
-                    case null:
-                        test = (int)Reason.Ok;
-                        break;
-                    default:
-                        test = (int)Reason.Illegal;
-                        break;
+                
+                if (string.IsNullOrWhiteSpace(req.Body)) 
+                { 
+                    test = (int)Reason.Ok;
+                   
                 }
+                else
+                {
+
+                    test = (int)Reason.Illegal;
+                    Console.WriteLine("here2");
+
+                }
+                 
                 return test;
             }
             else if (req.Method.ToLower() == "delete")
             {
-                switch (req.Body)
+
+                if (string.IsNullOrWhiteSpace(req.Body)) test = (int)Reason.Ok;
+                else
                 {
-                    case null:
-                        test = (int)Reason.Ok;
-                        break;
-                    default:
-                        test = (int)Reason.Illegal;
-                        break;
+
+                    test = (int)Reason.Illegal;
+
                 }
                 return test;
             }
             else if (req.Method.ToLower() == "update")
             {
-
-                if (newEl.Id == 0) test = (int)Reason.Illegal;
-                else test = IsValidJson(req.Body);
+                
+                if (string.IsNullOrWhiteSpace(req.Body))
+                {
+                    test = (int)Reason.Missing;
+                    return test;
+                }
+                else
+                {
+                    var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                    if (newEl.Id <= 0) test = (int)Reason.Illegal;
+                    else test = IsValidJson(req.Body);
+                }
                 return test;
 
             }
             else if (req.Method.ToLower() == "create")
             {
-                if (newEl.Id > 0) test = (int)Reason.Illegal;
-                else test = IsValidJson(req.Body);
+                if (string.IsNullOrWhiteSpace(req.Body))
+                {
+                    test = (int)Reason.Missing;
+                    return test;
+                }
+                else
+                {
+                    var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                    if (newEl.Id > 0) test = (int)Reason.Illegal;
+                    else test = IsValidJson(req.Body);
+                }
                 return test;
 
             }
@@ -482,7 +557,7 @@ namespace ServerB
         }
         // Utils
 
-        public static string ToJson(object data)
+        public static string ToJson(this object data)
         {
             return JsonSerializer.Serialize(data, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
@@ -490,11 +565,6 @@ namespace ServerB
         public static int IsValidJson(string body)
         {
             int test;
-            if (string.IsNullOrWhiteSpace(body))
-            {
-                test = (int)Reason.Missing;
-                return test;
-            }
             //Removes all leading and trailing white-space characters from the current string
             body = body.Trim();
             if ((body.StartsWith("{") && body.EndsWith("}")) || //For object
@@ -533,10 +603,10 @@ namespace ServerB
             category.Add(category.Keys.Last()+1, value);
         }
 
-        static void Delete(this Dictionary<int, string> category, int key)
+        static bool Delete(this Dictionary<int, string> category, int key)
         {
-            if (!category.ContainsKey(key)) Console.WriteLine($"The element with Key = {key} doesn't exist.");
-            else category.Remove(key);
+            if (!category.ContainsKey(key)) return false;
+            else category.Remove(key); Console.WriteLine($"Delete from key = {key}."); return true; 
         }
 
         static string FindById(this Dictionary<int, string> category, int key)
@@ -546,7 +616,7 @@ namespace ServerB
             else
             {
                 Console.WriteLine($"Key = {key} is not found.");
-                value = null;
+                value = "";
             }
             return value;
 
@@ -568,14 +638,14 @@ namespace ServerB
 
         }
 
-        static void Update(this Dictionary<int, string> category, int key, string value)
+        static bool Update(this Dictionary<int, string> category, int key, string value)
         {
-            if (!category.ContainsKey(key)) Console.WriteLine($"The element with Key = {key} doesn't exist.");
+            if (!category.ContainsKey(key)) return false;
             else 
             {
-                var old = category[key];
                 category[key] = value;
-                Console.WriteLine($"Update key = {key} value = {old} to {value}");
+                Console.WriteLine($"Update.");
+                return true;
             }
         }
 

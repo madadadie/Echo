@@ -75,21 +75,21 @@ namespace PrereqClient
                 // stream.Write(data);
                 var req = new
                 {
-                    method = "update",
-                    Path = "/api/categories",
+                    method = "read",
+                    Path = "/api/categories/3",
                     Date = "15078869",
-                    Body = new
+                    /*Body = new
                     {
                        cid = 3,
                        name = "Newname"
-                    }.ToJson()
+                    }.ToJson()*/
                     
                 
                 };
 
                 SendRequest(client,ToJson(req));
                 var response = client.ReadResponse();
-                Console.WriteLine($"mesage from server -- {response.Status} {response.Body}");
+                Console.WriteLine($"message from server -- {response.Status} {response.Body}");
 
                 /*
                 //response from the server
