@@ -75,13 +75,10 @@ namespace PrereqClient
                 // stream.Write(data);
                 var req = new
                 {
-                    method = "create",
+                    method = "echo",
                     Path = "/api/categories",
                     Date = "15078869",
-                   Body = new
-                    {
-                       name = "Newname"
-                    }.ToJson()
+                   Body = "Hello Word"
                     
                 
                 };

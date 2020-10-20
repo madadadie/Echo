@@ -227,7 +227,6 @@ namespace ServerB
             previous = previous & success;
             
             success = previous;
-            Console.WriteLine("success");
             if (success)
             {
                 if (method == 3)
@@ -340,7 +339,18 @@ namespace ServerB
                             client.SendResponse(response.ToJson());
                         }
                     }
-                    
+                    else if (req.Method.ToLower() == "echo")
+                    {
+                            var response = new
+                            {
+                                Status = $"{ (int)StatusCode.Ok} Ok",
+                                Body = req.Body
+
+                            };
+                            client.SendResponse(response.ToJson());
+                        
+                    }
+
 
                 }
             }
@@ -360,7 +370,6 @@ namespace ServerB
         public static void SendResponse(this TcpClient client, string response)
         {
             var msg = Encoding.UTF8.GetBytes(response);
-            Console.WriteLine($"msg? {msg.Length}");
             client.GetStream().Write(msg, 0, msg.Length);
         }
 
@@ -372,36 +381,36 @@ namespace ServerB
             switch (method)
             {
                 case "create":
-                    //Console.WriteLine("method create");
+                    
                     test = (int)Reason.To_create;
                     break;
                 case "read":
-                    //Console.WriteLine("method read");
+                  
                     test = (int)Reason.Ok;
                     break;
                 case "update":
-                    //Console.WriteLine("method update");
+                  
                     test = (int)Reason.To_update;
                     break;
                 case "delete":
-                    //Console.WriteLine("method delete");
+                  
                     test = (int)Reason.Ok;
                     break;
 
                 case "echo":
-                    //Console.WriteLine("method echo");
+                   
                     test = (int)Reason.Ok;
                     break;
                 case "":
-                    //Console.WriteLine("method echo");
+                  
                     test = (int)Reason.Missing;
                     break;
                 case null:
-                    //Console.WriteLine("method echo");
+                    
                     test = (int)Reason.Missing;
                     break;
                 default:
-                    //Console.WriteLine("unknown method");
+                   
                     test = (int)Reason.Illegal;
                     break;
             }
@@ -439,6 +448,11 @@ namespace ServerB
                 return test;
             }
             else if (pattern.IsMatch(req.Path))
+            {
+                test = (int)Reason.Ok;
+                return test;
+            }
+            else if (req.Method.ToLower() =="echo")
             {
                 test = (int)Reason.Ok;
                 return test;
@@ -547,6 +561,31 @@ namespace ServerB
                     else test = IsValidJson(req.Body);
                 }
                 return test;
+
+            }
+            else if (req.Method.ToLower() == "echo")
+            {
+                
+                if (string.IsNullOrWhiteSpace(req.Body))
+                {
+                    return (int)Reason.Missing;
+                }
+                else
+                {
+                   var body = req.Body.Trim();
+                    if ((body.StartsWith("{") && body.EndsWith("}")) ||
+                        (body.StartsWith("[") && body.EndsWith("]")))
+                    {
+             
+                        return (int)Reason.Illegal;
+                    }
+                    else
+                    {
+                        return (int)Reason.Ok;
+                    }
+                   
+                }
+            
 
             }
             else
