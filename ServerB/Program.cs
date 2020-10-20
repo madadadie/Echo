@@ -240,7 +240,7 @@ namespace ServerB
                         Status = $"{ (int)StatusCode.Created} Created",
                         Body = new {
                             cid =category.Keys.Last(),
-                            name= newEl
+                            name= newEl.Name
                         }.ToJson()
                         
                     };
@@ -273,14 +273,15 @@ namespace ServerB
                 }
                 else if (method == 0)
                 {
-                    Console.WriteLine("here method 0");
-
+                   
                     if (req.Method.ToLower() == "read")
                     {
                         string [] str = req.Path.Split("/", StringSplitOptions.RemoveEmptyEntries);
-                        var id = int.Parse(str[str.Length - 1]);
-                        if (id <=0)
+                        bool parsenum = int.TryParse(str[str.Length - 1], out int id);
+                        if (!parsenum)
+                            
                         {
+
                             var response = new
                             {
                                 Status = $"{ (int)StatusCode.Ok} Ok",
@@ -319,7 +320,7 @@ namespace ServerB
                     else if (req.Method.ToLower() == "delete")
                     {
                         string[] str = req.Path.Split("/", StringSplitOptions.RemoveEmptyEntries);
-                        var id = int.Parse(str[str.Length - 1]);
+                        var id  = int.Parse(str[str.Length - 1]);
                         if (category.Delete(id))
                         {
                             var response = new
@@ -453,7 +454,7 @@ namespace ServerB
 
         public static int VerifyDate(Request req)
         {
-            bool success = Int64.TryParse(req.Date, out long result);
+            bool success = long.TryParse(req.Date, out long result);
             int test;
             if (success)
             {
@@ -498,7 +499,6 @@ namespace ServerB
                 {
 
                     test = (int)Reason.Illegal;
-                    Console.WriteLine("here2");
 
                 }
                  
@@ -632,8 +632,11 @@ namespace ServerB
                     cid= kvp.Key, 
                     name= kvp.Value 
                 };
-                res.Add(ToJson(test));
-            }  
+            
+                res.Add(test.ToJson());
+           
+            }
+            
             return res.ToArray();
 
         }

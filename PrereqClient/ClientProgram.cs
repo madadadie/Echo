@@ -75,14 +75,13 @@ namespace PrereqClient
                 // stream.Write(data);
                 var req = new
                 {
-                    method = "read",
-                    Path = "/api/categories/3",
+                    method = "create",
+                    Path = "/api/categories",
                     Date = "15078869",
-                    /*Body = new
+                   Body = new
                     {
-                       cid = 3,
                        name = "Newname"
-                    }.ToJson()*/
+                    }.ToJson()
                     
                 
                 };
