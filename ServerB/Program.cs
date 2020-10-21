@@ -86,7 +86,7 @@ namespace ServerB
             Dictionary<int, string> category = new Dictionary<int, string>();
             init(category);
             StartServerThread(category);
-            Thread.Sleep(300);
+           
 
          
         }
@@ -302,7 +302,7 @@ namespace ServerB
                             var response = new
                             {
                                 Status = $"{ (int)StatusCode.Ok} Ok",
-                                Body = GetAll(category).ToJson()
+                                Body = GetAll(category)
 
                             };
 
@@ -372,7 +372,7 @@ namespace ServerB
                             client.SendResponse(response.ToJson());
                         
                     }
-
+                    
 
                 }
             }
@@ -393,9 +393,11 @@ namespace ServerB
                     };
                     client.SendResponse(response.ToJson());
                 }
+                Console.WriteLine(res.ToArray().Length);
 
                 
             }
+            Thread.Sleep(100);
 
         }
 
@@ -408,98 +410,156 @@ namespace ServerB
         //verify constraints
         public static int VerifyMethod(Request req)
         {
-            var method = req.Method.ToLower();
+           
             int test;
-            switch (method)
-            {
-                case "create":
-                    
-                    test = (int)Reason.To_create;
-                    break;
-                case "read":
-                  
-                    test = (int)Reason.Ok;
-                    break;
-                case "update":
-                  
-                    test = (int)Reason.To_update;
-                    break;
-                case "delete":
-                  
-                    test = (int)Reason.Ok;
-                    break;
+            if (!string.IsNullOrWhiteSpace(req.Method)) {
 
-                case "echo":
-                   
-                    test = (int)Reason.Ok;
-                    break;
-                case "":
-                  
-                    test = (int)Reason.Missing;
-                    break;
-                default:
-                   
-                    test = (int)Reason.Illegal;
-                    break;
+                var method = req.Method.ToLower();
+                
+                switch (method)
+                {
+                    case "create":
+
+                        test = (int)Reason.To_create;
+                        break;
+                    case "read":
+
+                        test = (int)Reason.Ok;
+                        break;
+                    case "update":
+
+                        test = (int)Reason.To_update;
+                        break;
+                    case "delete":
+
+                        test = (int)Reason.Ok;
+                        break;
+
+                    case "echo":
+
+                        test = (int)Reason.Ok;
+                        break;
+                    default:
+
+                        test = (int)Reason.Illegal;
+                        break;
+                }
+
+                
+            } else
+            {
+                test = (int)Reason.Missing;
             }
+
             return test;
         }
 
 
         public static int VerifyPath(Request req)
         {
+           
             int test;
-            var method = req.Method;
+            
             Regex case_1 = new Regex(@"^/api/categories$");
             Regex case_2 = new Regex(@"^/api/categories/\d+$");
             Regex case_3 = new Regex(@"^/api/categories(/\d+)?$");
             Regex pattern = new Regex("");
-            if (req.Method.ToLower() == "create")
+            
+           
+            if(!string.IsNullOrWhiteSpace(req.Method)) 
             {
-                pattern = case_1;
-            }
-            else if (req.Method.ToLower() == "delete")
-            {
-                pattern = case_2;
-            }
-            else if(req.Method.ToLower() == "update")
-            {
-                pattern = case_2;
-            }
-            else if(req.Method.ToLower() == "read")
-            {
-                
-                pattern = case_3;
-            }
-            if (string.IsNullOrWhiteSpace(req.Path))
-            {
-                if (req.Method.ToLower() == "echo")
+                if (string.IsNullOrWhiteSpace(req.Path))
                 {
-                    test = (int)Reason.Ok;
-                    return test;
+
+                    if (req.Method.ToLower() == "echo")
+                    {
+                        test = (int)Reason.Ok;
+                        return test;
+                    }
+                    else
+                    {
+                        test = (int)Reason.Missing;
+                        return test;
+                    }
                 }
+                else if (req.Method.ToLower() == "create")
+                {
+                    pattern = case_1;
+                    if (pattern.IsMatch(req.Path))
+                    {
+                        test = (int)Reason.Ok;
+                        return test;
+                    }
+                    else
+                    {
+                        test = (int)Reason.Illegal;
+                        return test;
+                    }
+                }
+                else if (req.Method.ToLower() == "delete")
+                {
+                    pattern = case_2;
+                    if (pattern.IsMatch(req.Path))
+                    {
+                        test = (int)Reason.Ok;
+                        return test;
+                    }
+                    else
+                    {
+                        test = (int)Reason.Illegal;
+                        return test;
+                    }
+                }
+                else if (req.Method.ToLower() == "update")
+                {
+                    pattern = case_2;
+                    if (pattern.IsMatch(req.Path))
+                    {
+                        test = (int)Reason.Ok;
+                        return test;
+                    }
+                    else
+                    {
+                        test = (int)Reason.Illegal;
+                        return test;
+                    }
+                }
+                else if (req.Method.ToLower() == "read")
+                {
+
+                    pattern = case_3;
+                    if (pattern.IsMatch(req.Path))
+                    {
+                        test = (int)Reason.Ok;
+                        return test;
+                    }
+                    else
+                    {
+                        test = (int)Reason.Illegal;
+                        return test;
+                    }
+                }
+
+
                 else
                 {
-                    test = (int)Reason.Missing;
+                    test = (int)Reason.Illegal;
                     return test;
                 }
-            }
-            else if (pattern.IsMatch(req.Path))
-            {
-                test = (int)Reason.Ok;
-                return test;
             }
             else
             {
-                test = (int)Reason.Illegal;
-                return test;
+                return -1;
             }
+
+           
 
 
         }
 
         public static int VerifyDate(Request req)
         {
+           
             bool success = long.TryParse(req.Date, out long result);
             int test;
             if (success)
@@ -531,98 +591,107 @@ namespace ServerB
         public static int VerifyBody(Request req)
         {
             int test;
+
             
-
-            if (req.Method.ToLower() == "read")
+            if (!string.IsNullOrWhiteSpace(req.Method)) 
             {
-                
-                if (string.IsNullOrWhiteSpace(req.Body)) 
-                { 
-                    test = (int)Reason.Ok;
-                   
-                }
-                else
+                if (req.Method.ToLower() == "read")
                 {
 
-                    test = (int)Reason.Illegal;
-
-                }
-                 
-                return test;
-            }
-            else if (req.Method.ToLower() == "delete")
-            {
-
-                if (string.IsNullOrWhiteSpace(req.Body)) test = (int)Reason.Ok;
-                else
-                {
-
-                    test = (int)Reason.Illegal;
-
-                }
-                return test;
-            }
-            else if (req.Method.ToLower() == "update")
-            {
-                
-                if (string.IsNullOrWhiteSpace(req.Body))
-                {
-                    test = (int)Reason.Missing;
-                    return test;
-                }
-                else
-                {
-                     if(IsValidJson(req.Body) == 0)
+                    if (string.IsNullOrWhiteSpace(req.Body))
                     {
-                        var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-                        if (newEl.Id <= 0) test = (int)Reason.Illegal;
-                        else return test = (int)Reason.Ok;
-                    }
-                    
-                    else test = IsValidJson(req.Body);
-                }
-                return test;
+                        test = (int)Reason.Ok;
 
-            }
-            else if (req.Method.ToLower() == "create")
-            {
-                if (string.IsNullOrWhiteSpace(req.Body))
-                {
-                    test = (int)Reason.Missing;
-                    return test;
-                }
-                else
-                {
-                    var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
-                    if (newEl.Id > 0) test = (int)Reason.Illegal;
-                    else test = IsValidJson(req.Body);
-                }
-                return test;
-
-            }
-            else if (req.Method.ToLower() == "echo")
-            {
-                
-                if (string.IsNullOrWhiteSpace(req.Body))
-                {
-                    return (int)Reason.Missing;
-                }
-                else
-                {
-                   var body = req.Body.Trim();
-                    if ((body.StartsWith("{") && body.EndsWith("}")) ||
-                        (body.StartsWith("[") && body.EndsWith("]")))
-                    {
-             
-                        return (int)Reason.Illegal;
                     }
                     else
                     {
-                        return (int)Reason.Ok;
+
+                        test = (int)Reason.Illegal;
+
                     }
-                   
+
+                    return test;
                 }
-            
+                else if (req.Method.ToLower() == "delete")
+                {
+
+                    if (string.IsNullOrWhiteSpace(req.Body)) test = (int)Reason.Ok;
+                    else
+                    {
+
+                        test = (int)Reason.Illegal;
+
+                    }
+                    return test;
+                }
+                else if (req.Method.ToLower() == "update")
+                {
+
+                    if (string.IsNullOrWhiteSpace(req.Body))
+                    {
+                        test = (int)Reason.Missing;
+                        return test;
+                    }
+                    else
+                    {
+                        if (IsValidJson(req.Body) == 0)
+                        {
+                            //var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                            //if (newEl.Id <= 0) test = (int)Reason.Illegal;
+                            //else 
+                                return (int)Reason.Ok;
+                        }
+
+                        else test = IsValidJson(req.Body);
+                    }
+                    return test;
+
+                }
+                else if (req.Method.ToLower() == "create")
+                {
+                    if (string.IsNullOrWhiteSpace(req.Body))
+                    {
+                        test = (int)Reason.Missing;
+                        return test;
+                    }
+                    else
+                    {
+                        var newEl = JsonSerializer.Deserialize<Category>(req.Body, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
+                        if (newEl.Id > 0) test = (int)Reason.Illegal;
+                        else test = IsValidJson(req.Body);
+                    }
+                    return test;
+
+                }
+                else if (req.Method.ToLower() == "echo")
+                {
+
+                    if (string.IsNullOrWhiteSpace(req.Body))
+                    {
+                        return (int)Reason.Missing;
+                    }
+                    else
+                    {
+                        var body = req.Body.Trim();
+                        if ((body.StartsWith("{") && body.EndsWith("}")) ||
+                            (body.StartsWith("[") && body.EndsWith("]")))
+                        {
+
+                            return (int)Reason.Illegal;
+                        }
+                        else
+                        {
+                            return (int)Reason.Ok;
+                        }
+
+                    }
+
+
+                }
+                else
+                {
+                    return IsValidJson(req.Body);
+                }
 
             }
             else
@@ -650,6 +719,7 @@ namespace ServerB
                 {
                     var obj = JToken.Parse(body);
                     test = (int)Reason.Ok;
+                    Console.WriteLine($"{test}");
                     return test;
                 }
                 catch (JsonReaderException jex)
@@ -657,18 +727,21 @@ namespace ServerB
                     //Exception in parsing json
                     Console.WriteLine(jex.Message);
                     test = (int)Reason.Illegal;
+                    Console.WriteLine($"{test}");
                     return test;
                 }
                 catch (Exception ex) //some other exception
                 {
                     Console.WriteLine(ex.ToString());
                     test = (int)Reason.Illegal;
+                    Console.WriteLine($"{test}");
                     return test;
                 }
             }
             else
             {
                 test = (int)Reason.Illegal;
+                Console.WriteLine($"{test}");
                 return test;
             }
         }
@@ -698,9 +771,9 @@ namespace ServerB
 
         }
 
-        static string [] GetAll(this Dictionary<int, string> category)
+        static string GetAll(this Dictionary<int, string> category)
         {
-            List<string> res = new List<string>();
+            List<object> res = new List<object>();
             foreach (KeyValuePair<int, string> kvp in category)
             {
                 var test = new 
@@ -709,11 +782,11 @@ namespace ServerB
                     name= kvp.Value 
                 };
             
-                res.Add(test.ToJson());
+                res.Add(test);
            
             }
             
-            return res.ToArray();
+            return res.ToJson();
 
         }
 

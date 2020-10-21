@@ -75,9 +75,10 @@ namespace PrereqClient
                 // stream.Write(data);
                 var req = new
                 {
-                    Method = "echo",
+                    Method = "xxxx",
+                    Path = "testing",
                     Date = UnixTimestamp(),
-                    Body = "Hello World"
+                    Body = "{}"
                 };
 
                 SendRequest(client,ToJson(req));
